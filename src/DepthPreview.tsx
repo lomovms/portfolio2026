@@ -5,6 +5,7 @@ import { assetPath } from './assetPath';
 
 const textureCache = new Map<string, Promise<THREE.Texture[]>>();
 let renderer: THREE.WebGLRenderer | undefined, stopCurrent: (() => void) | undefined;
+const tiltRenderers: THREE.WebGLRenderer[] = [];
 const scene = new THREE.Scene(), camera = new THREE.Camera();
 const uniforms = {
     image: { value: null as THREE.Texture | null }, depthMap: { value: null as THREE.Texture | null },
@@ -78,10 +79,17 @@ function loadTextures(slug: string, portfolio: boolean) {
 }
 
 const portfolioParallax = { depthStrength: .57, smoothness: .35, invertDepth: true };
-function preview(surface: HTMLDivElement, slug: string, background: string, pointer: THREE.Vector2, hovering: { current: boolean }, portfolio: boolean, wake: { current: (() => void) | null }, onReplaced: () => void) {
-    stopCurrent?.();
-    try { renderer ??= new THREE.WebGLRenderer({ alpha: true, antialias: false }); } catch { return () => {}; }
-    const gl = renderer, canvas = gl.domElement;
+function preview(surface: HTMLDivElement, slug: string, background: string, pointer: THREE.Vector2, hovering: { current: boolean }, portfolio: boolean, wake: { current: (() => void) | null }, onReplaced: () => void, tilt: boolean) {
+    const createRenderer = () => new THREE.WebGLRenderer({ alpha: true, antialias: false });
+    let gl: THREE.WebGLRenderer;
+    try {
+        if (tilt) gl = tiltRenderers.pop() ?? createRenderer();
+        else {
+            stopCurrent?.();
+            gl = renderer ??= createRenderer();
+        }
+    } catch { return () => {}; }
+    const canvas = gl.domElement;
     Object.assign(canvas.style, { position: 'absolute', inset: '0', width: '100%', height: '100%', pointerEvents: 'none', zIndex: '1', visibility: 'hidden' });
     canvas.setAttribute('aria-hidden', 'true'); surface.appendChild(canvas);
     let stopped = false, animation = 0, previous = performance.now();
@@ -90,19 +98,24 @@ function preview(surface: HTMLDivElement, slug: string, background: string, poin
         gl.setPixelRatio(portfolio ? 1 : Math.min(window.devicePixelRatio, 1.5));
         gl.setSize(Math.max(1, width), Math.max(1, height), false);
         const aspect = width / Math.max(1, height), imageAspect = 1000 / 650;
-        uniforms.cover.value.set(Math.min(1, aspect / imageAspect), Math.min(1, imageAspect / aspect));
-        uniforms.resolution.value.set(Math.max(1, width), Math.max(1, height));
+        cover.set(Math.min(1, aspect / imageAspect), Math.min(1, imageAspect / aspect));
+        resolution.set(Math.max(1, width), Math.max(1, height));
         wake.current?.();
     };
+    const cover = new THREE.Vector2(), resolution = new THREE.Vector2();
     resize(); const observer = new ResizeObserver(resize); observer.observe(surface);
     const stop = () => {
         if (stopped) return; stopped = true; cancelAnimationFrame(animation); observer.disconnect();
         wake.current = null;
         if (canvas.parentElement === surface) canvas.remove();
+        if (tilt) {
+            if (tiltRenderers.length < 3) tiltRenderers.push(gl);
+            else { gl.dispose(); gl.forceContextLoss(); }
+        }
         if (stopCurrent === release) stopCurrent = undefined;
     };
     const release = () => { stop(); onReplaced(); };
-    stopCurrent = release;
+    if (!tilt) stopCurrent = release;
     void loadTextures(slug, portfolio).then(([image, depth]) => {
         if (stopped) return;
         image.colorSpace = THREE.SRGBColorSpace; image.needsUpdate = true;
@@ -110,14 +123,10 @@ function preview(surface: HTMLDivElement, slug: string, background: string, poin
             image.minFilter = THREE.LinearFilter;
             depth.minFilter = THREE.LinearFilter;
         }
-        uniforms.image.value = image; uniforms.depthMap.value = depth;
-        uniforms.background.value.set(background);
-        uniforms.zoom.value = portfolio ? 1.075 : 1.10;
-        uniforms.depthStrength.value = portfolio ? (slug === 'barbershop_batya' ? .23 : portfolioParallax.depthStrength) : 1;
-        uniforms.invertDepth.value = portfolio && portfolioParallax.invertDepth;
-        uniforms.focusEnabled.value = !portfolio;
-        uniforms.offset.value.set(0, 0); uniforms.focus.value.set(0, 0); uniforms.strength.value = portfolio ? 1 : 0;
-        while (textureCache.size > 4) {
+        const offset = new THREE.Vector2(), focus = new THREE.Vector2();
+        const backgroundColor = new THREE.Color(background);
+        let strength = portfolio ? 1 : 0;
+        while (!tilt && textureCache.size > 5) {
             const oldest = textureCache.keys().next().value!;
             if (oldest === slug) { const pair = textureCache.get(oldest)!; textureCache.delete(oldest); textureCache.set(oldest, pair); continue; }
             void textureCache.get(oldest)!.then(pair => pair.forEach(texture => texture.dispose())).catch(() => {});
@@ -131,13 +140,26 @@ function preview(surface: HTMLDivElement, slug: string, background: string, poin
             if (stopped) return;
             const dt = Math.min((now - previous) / 1000, .06); previous = now;
             const follow = 1 - Math.exp(-(portfolio ? portfolioParallax.smoothness : 1) * 12 * dt);
-            uniforms.offset.value.lerp(pointer, follow);
+            offset.lerp(pointer, follow);
             if (!portfolio) {
-                uniforms.focus.value.lerp(pointer, 1 - Math.exp(-dt * 6));
-                uniforms.strength.value = THREE.MathUtils.damp(uniforms.strength.value, hovering.current ? 1 : 0, 10, dt);
+                focus.lerp(pointer, 1 - Math.exp(-dt * 6));
+                strength = THREE.MathUtils.damp(strength, hovering.current ? 1 : 0, 10, dt);
             }
+            uniforms.cover.value.copy(cover);
+            uniforms.resolution.value.copy(resolution);
+            uniforms.image.value = image;
+            uniforms.depthMap.value = depth;
+            uniforms.background.value.copy(backgroundColor);
+            uniforms.zoom.value = portfolio ? 1.075 : 1.10;
+            uniforms.depthStrength.value = portfolio ? (slug === 'barbershop_batya' ? .23 : portfolioParallax.depthStrength) : 1;
+            uniforms.invertDepth.value = portfolio && portfolioParallax.invertDepth;
+            uniforms.focusEnabled.value = !portfolio;
+            uniforms.offset.value.copy(offset);
+            uniforms.focus.value.copy(focus);
+            uniforms.strength.value = strength;
+            material.uniformsNeedUpdate = true;
             gl.render(scene, camera); canvas.style.visibility = 'visible';
-            if (!portfolio || uniforms.offset.value.distanceToSquared(pointer) > .000004) schedule();
+            if (!portfolio || offset.distanceToSquared(pointer) > .000004) schedule();
         };
         wake.current = schedule;
         schedule();
@@ -145,7 +167,7 @@ function preview(surface: HTMLDivElement, slug: string, background: string, poin
     return stop;
 }
 
-export function DepthPreview({ slug, background, portfolio = false }: { slug: string; background: string; portfolio?: boolean }) {
+export function DepthPreview({ slug, background, portfolio = false, tilt = false }: { slug: string; background: string; portfolio?: boolean; tilt?: boolean }) {
     const surface = useRef<HTMLDivElement>(null), pointer = useRef(new THREE.Vector2()), hovering = useRef(false);
     const wake = useRef<(() => void) | null>(null);
     const timeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -158,17 +180,40 @@ export function DepthPreview({ slug, background, portfolio = false }: { slug: st
         return () => { observer.disconnect(); clearTimeout(timeout.current); };
     }, []);
     useEffect(() => {
-        if (active && visible && surface.current) {
-            return preview(surface.current, slug, background, pointer.current, hovering, portfolio, wake, () => setActive(false));
+        if ((active || tilt) && visible && surface.current) {
+            return preview(surface.current, slug, background, pointer.current, hovering, portfolio, wake, () => setActive(false), tilt);
         }
-    }, [active, visible, slug, background, portfolio]);
+    }, [active, visible, slug, background, portfolio, tilt]);
+    useEffect(() => {
+        if (!tilt || !visible) return;
+        pointer.current.set(0, 0);
+        let origin: { beta: number; gamma: number; angle: number } | undefined;
+        const sensor = ({ beta, gamma }: DeviceOrientationEvent) => {
+            if (beta === null || gamma === null) return;
+            const angle = screen.orientation?.angle ?? Number(window.orientation ?? 0);
+            if (!origin || origin.angle !== angle) origin = { beta, gamma, angle };
+            const x = (gamma - origin.gamma) / 24;
+            const y = (THREE.MathUtils.euclideanModulo(beta - origin.beta + 180, 360) - 180) / 24;
+            const radians = THREE.MathUtils.degToRad(angle);
+            const horizontal = THREE.MathUtils.clamp(x * Math.cos(radians) + y * Math.sin(radians), -1, 1);
+            const vertical = THREE.MathUtils.clamp(x * Math.sin(radians) - y * Math.cos(radians), -1, 1);
+            if (Math.hypot(horizontal - pointer.current.x, vertical - pointer.current.y) < .018) return;
+            pointer.current.set(horizontal, vertical);
+            wake.current?.();
+        };
+        window.addEventListener('deviceorientation', sensor);
+        return () => {
+            window.removeEventListener('deviceorientation', sensor);
+            pointer.current.set(0, 0);
+        };
+    }, [tilt, visible]);
     useEffect(() => {
         if (portfolio && !window.matchMedia('(pointer: coarse), (prefers-reduced-motion: reduce)').matches) {
             void loadTextures(slug, true).catch(() => {});
         }
     }, [portfolio, slug]);
     const move = (event: PointerEvent<HTMLDivElement>) => {
-        if (event.pointerType === 'touch' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        if (tilt || event.pointerType === 'touch' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         clearTimeout(timeout.current);
         hovering.current = true;
         setActive(true);
@@ -176,7 +221,7 @@ export function DepthPreview({ slug, background, portfolio = false }: { slug: st
         pointer.current.set((event.clientX - rect.left) / rect.width * 2 - 1, 1 - (event.clientY - rect.top) / rect.height * 2);
         wake.current?.();
     };
-    const leave = () => { hovering.current = false; pointer.current.set(0, 0); wake.current?.(); clearTimeout(timeout.current); timeout.current = setTimeout(() => setActive(false), portfolio ? 1350 : 650); };
+    const leave = () => { if (tilt) return; hovering.current = false; pointer.current.set(0, 0); wake.current?.(); clearTimeout(timeout.current); timeout.current = setTimeout(() => setActive(false), portfolio ? 1350 : 650); };
     return <div ref={surface} className="depth-preview" onPointerEnter={move} onPointerMove={move} onPointerLeave={leave} onPointerCancel={leave}>
         <img src={assetPath(`assets/cards/${slug}.webp`)} alt="" draggable={false} loading="lazy" decoding="async" width="1000" height="650" style={{ background, transform: portfolio ? 'scale(1.075)' : undefined }}/>
     </div>;

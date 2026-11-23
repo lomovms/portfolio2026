@@ -119,8 +119,8 @@ export default function AstronautSequence({ standalone = false, inspectionProgre
     return <section ref={section} id="astronaut" className={`astronaut-sequence ${standalone ? 'astro-standalone' : ''}`} aria-label="Космическое путешествие астронавта">
         <div className="astro-sticky">
             <div className="astro-scribble" aria-hidden="true"><svg viewBox="0 0 1280 720" fill="none"><path d="M310 -95C680 130 1000 -50 820 -110C720 -150 510 -100 620 -25C850 100 1070 -50 1010 50C750 330 875 425 1370 285" stroke="#83f6f4" strokeWidth="25"/></svg></div>
-            <h2 className="astro-heading">Впечатления</h2>
-            <div className="astro-copy"><p>Мы создаём цифровые миры с собственным характером. Они передают идею бренда, вовлекают и остаются в памяти.</p><p>Арт-дирекшн, 3D и интерактивная разработка объединяются в путешествия, которые хочется исследовать.</p></div>
+            <h2 className="astro-heading">Полёт</h2>
+            <div className="astro-copy"><p>Интерактивный этюд для браузера. Прокрутите страницу, чтобы приблизить планшет и запустить полёт.</p><p>В этой сцене я собрал камеру, свет, эффекты и управление движением в одну последовательность.</p></div>
             <div className="astro-device" ref={device}>
                 <i className="astro-device-camera" aria-hidden="true"/>
                 <div className="astro-screen" ref={screen} onPointerMove={orbit} onPointerLeave={() => { previousPointer.current = null; }}>
@@ -135,7 +135,7 @@ export default function AstronautSequence({ standalone = false, inspectionProgre
             </View>
             <div className="astro-hint"><span>ПОЛЁТ ПРОДОЛЖАЕТСЯ АВТОМАТИЧЕСКИ<br/>ВЕДИТЕ КУРСОР ПО КРУГУ, ЧТОБЫ УСКОРИТЬСЯ</span><div className="astro-controls"><button className="astro-sound" onClick={toggle} aria-label={enabled ? 'Выключить звук полёта' : 'Включить звук полёта'} aria-pressed={enabled}>{enabled ? 'ЗВУК ВКЛ.' : 'ЗВУК ВЫКЛ.'}</button><button onClick={() => { paused.current = !paused.current; setStopped(paused.current); }} aria-label={stopped ? 'Продолжить анимацию астронавта' : 'Приостановить анимацию астронавта'}>{stopped ? '▶' : 'Ⅱ'}</button></div></div>
             {audioError && <p className="astro-audio-error" role="status">Не удалось загрузить звук. Перезагрузите страницу.</p>}
-            <div className="astro-finale"><small>ЗА ПРЕДЕЛАМИ ПРИВЫЧНОГО</small><h2>Воображение<br/>не знает границ.</h2><a href="#contact">Создадим новый мир ↗</a><button onClick={() => { Object.assign(flight.current, createFlight(), { scroll: flight.current.scroll, started: true, progress: .19 }); paused.current = false; setStopped(false); }}>Повторить полёт ↻</button></div>
+            <div className="astro-finale"><small>ЗА ПРЕДЕЛАМИ ПРИВЫЧНОГО</small><h2>Воображение<br/>не знает границ.</h2><a href="#contact">Обсудить проект ↗</a><button onClick={() => { Object.assign(flight.current, createFlight(), { scroll: flight.current.scroll, started: true, progress: .19 }); paused.current = false; setStopped(false); }}>Повторить полёт ↻</button></div>
             {standalone && <a className="astro-back" href={assetPath('')}>← НА ГЛАВНУЮ</a>}
             <a className="astro-skip" href="#contact">Пропустить полёт ↓</a>
         </div>

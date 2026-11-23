@@ -1,13 +1,14 @@
 import { lazy, Suspense, createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { FormEvent, MouseEvent, ReactNode } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 import { Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { expertise, projects, portfolioWorks, projectPath } from './data';
-import type { Project, PortfolioWork } from './data';
+import { expertise, portfolioWorks, projectPath } from './data';
+import type { PortfolioWork } from './data';
 import Tarot from './Tarot';
 import { useSound } from './Sound';
 import { assetPath } from './assetPath';
+import { TiltPermission, TiltProvider, useTilt } from './tilt';
 import './astronaut.css';
 gsap.registerPlugin(ScrollTrigger);
 const Graphics = lazy(async () => ({ default: (await import('./Graphics')).Graphics }));
@@ -17,7 +18,7 @@ const AstronautReview = lazy(async () => ({ default: (await import('./AstronautS
 
 function AstronautPlaceholder() {
     return <section id="astronaut" className="astronaut-sequence" aria-label="Космическое путешествие астронавта">
-        <div className="astro-sticky"><h2 className="astro-heading">Впечатления</h2><div className="astro-device"><div className="astro-loading" role="status">ЗАГРУЖАЕМ СКАФАНДР</div></div></div>
+        <div className="astro-sticky"><h2 className="astro-heading">Полёт</h2><div className="astro-device"><div className="astro-loading" role="status">ЗАГРУЖАЕМ СКАФАНДР</div></div></div>
     </section>;
 }
 
@@ -47,14 +48,16 @@ function Still({ name, background, gallery = false, eager = false, onReady }: {
     </div>;
 }
 const DepthPreview = lazy(async () => ({ default: (await import('./DepthPreview')).DepthPreview }));
-const allProjects = [...portfolioWorks, ...projects];
+const allProjects = portfolioWorks;
+const githubProfile = 'https://github.com/lomovms';
 
 function PortfolioImage({ work }: { work: PortfolioWork }) {
     const surface = useRef<HTMLDivElement>(null);
     const [near, setNear] = useState(false);
+    const { ready: tilt } = useTilt();
     useEffect(() => {
         const element = surface.current;
-        if (!element || !window.matchMedia('(any-hover: hover) and (prefers-reduced-motion: no-preference)').matches) return;
+        if (!element || near || (!tilt && !window.matchMedia('(any-hover: hover) and (prefers-reduced-motion: no-preference)').matches)) return;
         const observer = new IntersectionObserver(([entry]) => {
             if (!entry.isIntersecting) return;
             setNear(true);
@@ -62,11 +65,11 @@ function PortfolioImage({ work }: { work: PortfolioWork }) {
         }, { rootMargin: '180px' });
         observer.observe(element);
         return () => observer.disconnect();
-    }, []);
+    }, [tilt, near]);
     const poster = <div className="depth-preview"><img src={assetPath(`assets/cards/${work.slug}.webp`)} alt=""
         loading="lazy" decoding="async" width="1000" height="650" style={{ transform: 'scale(1.075)' }}/></div>;
     return <div ref={surface} className="portfolio-image" style={{ backgroundColor: work.background }}>
-        <Suspense fallback={poster}>{near ? <DepthPreview slug={work.slug} background={work.background} portfolio/> : poster}</Suspense>
+        <Suspense fallback={poster}>{near ? <DepthPreview slug={work.slug} background={work.background} portfolio tilt={tilt}/> : poster}</Suspense>
     </div>;
 }
 const NavigationContext = createContext<(path: string) => void>(() => { });
@@ -80,7 +83,6 @@ function LocalLink({ to, children, className = '', label }: {
     return <a href={`${import.meta.env.BASE_URL}${to.replace(/^\//, '')}`} className={className} aria-label={label} onClick={(event: MouseEvent<HTMLAnchorElement>) => { if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
         return; event.preventDefault(); go(to); }}>{children}</a>;
 }
-function Arrow() { return <span className="arrow" aria-hidden="true">↗</span>; }
 function Pill({ to, children, dark = false }: {
     to: string;
     children: ReactNode;
@@ -89,13 +91,6 @@ function Pill({ to, children, dark = false }: {
 function Crosshair({ text = 'ЛИСТАЙТЕ, ЧТОБЫ ОТКРЫТЬ БОЛЬШЕ' }: {
     text?: string;
 }) { return <div className="crosshair"><span>+</span><span>+</span><small>{text}</small><span>+</span><span>+</span></div>; }
-function Newsletter({ compact = false }: {
-    compact?: boolean;
-}) {
-    const [message, setMessage] = useState('');
-    const submit = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); setMessage('Это учебная форма. Подписка не оформляется, данные никуда не отправлены.'); };
-    return <div className={`newsletter ${compact ? 'compact' : ''}`}><h3>Подпишитесь<br />на наши новости</h3><form onSubmit={submit}><label className="sr-only" htmlFor={compact ? 'menu-email' : 'footer-email'}>Ваша электронная почта</label><input id={compact ? 'menu-email' : 'footer-email'} type="email" placeholder="Ваша почта" required onChange={() => setMessage('')}/><button aria-label="Подписаться" type="submit">→</button></form><p className="form-status" role="status">{message}</p></div>;
-}
 function Header({ onContact }: {
     onContact: () => void;
 }) {
@@ -147,11 +142,11 @@ function Header({ onContact }: {
         }
     }, [open]);
     return <>
-  <header className={`header ${darkHeader?'dark-header':''}`}><LocalLink to="/" className="logo" label="Lusion — на главную">LUSION</LocalLink>
+  <header className={`header ${darkHeader?'dark-header':''}`}><LocalLink to="/" className="logo" label="Lomov — на главную">LOMOV</LocalLink>
    {pathname.startsWith('/projects/') && pathname != '/projects/' && <button className="back-button" onClick={() => go('/projects/')}>↙ <span>НАЗАД</span></button>}
    <div className="header-actions"><button className={`sound-button ${enabled ? 'playing' : ''}`} onClick={toggle} aria-label={enabled ? 'Выключить звук' : 'Включить звук'} aria-pressed={enabled}><span>{enabled ? '∿' : '—'}</span></button><button className="talk-button" onClick={onContact}>ОБСУДИМ <i>•</i></button><button ref={toggleRef} className={`menu-button ${open ? 'is-open' : ''}`} aria-label={open ? 'Закрыть меню' : 'Открыть меню'} aria-expanded={open} aria-controls="main-menu" onClick={() => setOpen(!open)}>{open ? 'ЗАКРЫТЬ' : 'МЕНЮ'} <i>{open ? '⋮' : '••'}</i></button></div>
   </header>
-  {open && <><div className="menu-shade" onClick={() => setOpen(false)}/><div className="menu-panels" id="main-menu" ref={menu}><nav aria-label="Главная навигация">{[['/', 'ГЛАВНАЯ'], ['/about/', 'О НАС'], ['/projects/', 'ПРОЕКТЫ']].map(([to, title]) => <LocalLink to={to} key={to} className={pathname.replace(/\/$/, '') === to.replace(/\/$/, '') ? 'active' : ''}>{title}<span>•</span></LocalLink>)}<button onClick={() => { setOpen(false); onContact(); }}>КОНТАКТЫ <span>↗</span></button></nav><Newsletter compact/><a className="labs-button" href="https://labs.lusion.co" target="_blank" rel="noreferrer"><span className="labs-icon">ö</span> ЛАБОРАТОРИЯ <span>↗</span></a></div></>}
+  {open && <><div className="menu-shade" onClick={() => setOpen(false)}/><div className="menu-panels" id="main-menu" ref={menu}><nav aria-label="Главная навигация">{[['/', 'ГЛАВНАЯ'], ['/about/', 'ОБО МНЕ'], ['/projects/', 'ПРОЕКТЫ']].map(([to, title]) => <LocalLink to={to} key={to} className={pathname.replace(/\/$/, '') === to.replace(/\/$/, '') ? 'active' : ''}>{title}<span>•</span></LocalLink>)}<button onClick={() => { setOpen(false); onContact(); }}>КОНТАКТЫ <span>↗</span></button></nav><a className="labs-button" href={githubProfile} target="_blank" rel="noreferrer">GitHub <span aria-hidden="true">↗</span></a></div></>}
  </>;
 }
 function Modal({ children, onClose, className = '' }: {
@@ -192,33 +187,29 @@ function Modal({ children, onClose, className = '' }: {
 function Contact({ onClose }: {
     onClose: () => void;
 }) {
-    return <Modal onClose={onClose}><div className="contact-panel"><small>ЕСТЬ СМЕЛАЯ ИДЕЯ?</small><h2>Давайте<br />создадим<br />что-то новое<span>↗</span></h2><a href="mailto:hello@lusion.co">hello@lusion.co ↗</a><p>Независимая учебная реконструкция.<br />Адрес принадлежит оригинальной студии Lusion.</p></div></Modal>;
+    return <Modal onClose={onClose}><div className="contact-panel"><small>КОНТАКТЫ</small><h2>Обсудим проект?</h2><p>Интерактивный сайт, веб-графика или идея, которую хочется проверить в браузере.</p><a href={githubProfile} target="_blank" rel="noreferrer">Мой профиль на GitHub ↗</a></div></Modal>;
 }
 function Reel({ onClose }: {
     onClose: () => void;
 }) {
     const [index, setIndex] = useState(0);
     const [playing, setPlaying] = useState(true);
-    const items = [projects[5], projects[3], projects[12], projects[9], projects[7]];
+    const items = allProjects;
     useEffect(() => { if (!playing)
         return; const timer = setInterval(() => setIndex(i => (i + 1) % items.length), 6000); return () => clearInterval(timer); }, [playing, items.length]);
-    return <Modal onClose={onClose} className="reel-modal"><div className="reel-content"><Still name={items[index].slug} background={items[index].background}/><div className="reel-caption"><small>СЛАЙД-ШОУ / ИЗБРАННЫЕ ПРОЕКТЫ</small><h2>{items[index].title}</h2></div><div className="reel-controls"><button onClick={() => setPlaying(!playing)}>{playing ? 'Ⅱ ПАУЗА' : '▶ ВОСПРОИЗВЕСТИ'}</button><div className="reel-progress">{items.map((p, i) => <button aria-label={`Сцена ${i + 1}: ${p.title}`} key={p.slug} className={index === i ? 'active' : ''} onClick={() => setIndex(i)}/>)}</div><span>0{index + 1} / 05</span></div></div></Modal>;
+    return <Modal onClose={onClose} className="reel-modal"><div className="reel-content"><Still name={items[index].slug} background={items[index].background}/><div className="reel-caption"><small>ПОДБОРКА РАБОТ</small><h2>{items[index].title}</h2></div><div className="reel-controls"><button onClick={() => setPlaying(!playing)}>{playing ? 'Ⅱ ПАУЗА' : '▶ ВОСПРОИЗВЕСТИ'}</button><div className="reel-progress">{items.map((p, i) => <button aria-label={`Сцена ${i + 1}: ${p.title}`} key={p.slug} className={index === i ? 'active' : ''} onClick={() => setIndex(i)}/>)}</div><span>{String(index + 1).padStart(2, '0')} / {String(items.length).padStart(2, '0')}</span></div></div></Modal>;
 }
-function ProjectCard({ project, index }: { project: Project | PortfolioWork; index: number }) {
-    const scene = 'scene' in project ? project.scene : undefined;
-    const wordmarks: Partial<Record<Project['scene'], string>> = { motor: '◌ ATLAS', tree: 'OF THE OAK', ribbon: 'DDD’24', space: 'SPAACE', globe: 'WORLDCOIN' };
+function ProjectCard({ project, index }: { project: PortfolioWork; index: number }) {
     return <LocalLink to={projectPath(project)} className="project-card" label={`Открыть проект ${project.title}`}>
         <div className="project-image">
-            {'depthPreview' in project ? <PortfolioImage work={project}/> : <Still name={project.slug} background={project.background}/>}
-            {scene && wordmarks[scene] && <div className={`project-wordmark wordmark-${scene}`} aria-hidden="true">{wordmarks[scene]}</div>}
+            <PortfolioImage work={project}/>
             <span className="card-open">↗</span><span className="card-index">{String(index + 1).padStart(2, '0')} — {allProjects.length}</span>
         </div>
-        <p className="project-category">{project.caption}</p><h3><span className="card-title-arrow">→</span>{project.title}</h3>
+        <p className="project-category">{project.caption}</p><h3><span className="card-title-arrow" aria-hidden="true">→</span><span>{project.title}</span></h3>
     </LocalLink>;
 }
-function ProjectGrid({ featured = false }: { featured?: boolean }) {
-    const list = featured ? allProjects.slice(0, 12) : allProjects;
-    return <div className="project-grid">{list.map((project, index) => <ProjectCard key={project.slug} project={project} index={index}/>)}</div>;
+function ProjectGrid() {
+    return <><TiltPermission/><div className="project-grid">{allProjects.map((project, index) => <ProjectCard key={project.slug} project={project} index={index}/>)}</div></>;
 }
 function Home({ onReel }: {
     onReel: () => void;
@@ -235,28 +226,29 @@ function Home({ onReel }: {
         return () => window.clearTimeout(minimum);
     }, [posterReady, loading]);
     return <>
-  {loading && <div className="preloader" role="status" aria-label="Загрузка главной"><span className="portfolio-loader-label">LUSION</span><div className="loader-track"><span/></div></div>}
-  <section className="home-hero page-padding"><h1>Создаём истории в 3D<br className="desktop-break"/> и интерактивные миры,<br className="desktop-break"/> которые выделяют бренды</h1><div className="hero-stage"><div className="hero-poster"><Still name="hero" background="#15161c" gallery eager onReady={() => setPosterReady(true)}/></div><Suspense fallback={null}><HeroScene/></Suspense></div><Crosshair /></section>
-  <section className="approach page-padding section-space"><div className="section-label reveal">СМЕЛЫЕ ИДЕИ.<br />ЖИВОЕ ВОПЛОЩЕНИЕ.</div><div className="approach-body"><h2 className="split-reveal">Дизайн, движение, 3D и технологии — вместе они превращают идею в опыт, который хочется исследовать.</h2><Pill to="/about/">Наш подход</Pill></div></section>
-  <section className="reel-section page-padding"><button className="reel-preview" onClick={onReel} aria-label="Смотреть слайд-шоу"><Still name="porsche_dream_machine" background="#16151d"/><span className="reel-title">СМОТРЕТЬ<br />СЛАЙД-ШОУ <span>↗</span></span><span className="reel-badge">▶</span></button><Crosshair text="ВООБРАЖЕНИЕ В ДВИЖЕНИИ"/></section>
-  <section className="featured page-padding section-space"><div className="featured-heading"><h2 className="display-title reveal">Избранное</h2><p>ЦИФРОВЫЕ ИСТОРИИ ДЛЯ СМЕЛЫХ БРЕНДОВ<br />И КОМАНД, КОТОРЫЕ СМОТРЯТ ВПЕРЁД.</p></div><ProjectGrid featured/><div className="all-projects"><Pill to="/projects/" dark>Все проекты <sup>{allProjects.length}</sup></Pill></div></section>
+  {loading && <div className="preloader" role="status" aria-label="Загрузка главной"><span className="portfolio-loader-label">LOMOV</span><div className="loader-track"><span/></div></div>}
+  <section className="home-hero page-padding"><h1>Креативный разработчик.<br className="desktop-break"/> Создаю интерактивные сайты<br className="desktop-break"/> и&nbsp;3D-графику для&nbsp;веба.</h1><div className="hero-stage"><div className="hero-poster"><Still name="hero" background="#15161c" gallery eager onReady={() => setPosterReady(true)}/></div><Suspense fallback={null}><HeroScene/></Suspense></div><Crosshair /></section>
+  <section className="approach page-padding section-space"><div className="section-label reveal">МОЙ ПОДХОД</div><div className="approach-body"><h2 className="split-reveal">Соединяю дизайн, 3D и&nbsp;код, чтобы с&nbsp;идеей можно было взаимодействовать прямо в&nbsp;браузере.</h2><Pill to="/about/">Обо мне</Pill></div></section>
+  <section className="reel-section page-padding"><button className="reel-preview" onClick={onReel} aria-label="Смотреть слайд-шоу"><Still name="grand_blue" background="#10141e"/><span className="reel-title">СМОТРЕТЬ<br />РАБОТЫ <span>↗</span></span><span className="reel-badge">▶</span></button><Crosshair text="ВООБРАЖЕНИЕ В ДВИЖЕНИИ"/></section>
+  <section className="featured page-padding section-space"><div className="featured-heading"><h2 className="display-title reveal">Избранное</h2><p>Мои работы с&nbsp;объёмом, светом и&nbsp;движением — от персонажей до архитектуры.</p></div><ProjectGrid/><div className="all-projects"><Pill to="/projects/" dark>Все проекты <sup>{allProjects.length}</sup></Pill></div></section>
   <LazyAstronaut />
  </>;
 }
 function Projects() { return <section className="projects-page page-padding"><div className="projects-title"><h1>ПРОЕКТЫ</h1><div><span>{allProjects.length}</span><span>↘</span></div></div><ProjectGrid /></section>; }
-const team = [{ name: 'Эдан Кван', role: 'СООСНОВАТЕЛЬ / КРЕАТИВНЫЙ ДИРЕКТОР' }, { name: 'Команда Lusion', role: 'ДИЗАЙН / ДВИЖЕНИЕ / ТЕХНОЛОГИИ' }];
-const awards = [['Awwwards', [['001', 'Сайт года'], ['001', 'Разработка года'], ['001', 'Сайт месяца'], ['010', 'Сайт дня'], ['016', 'Почётное упоминание']]], ['FWA', [['001', 'Сайт года'], ['002', 'Сайт месяца'], ['017', 'Сайт дня']]], ['CSSDA', [['001', 'Сайт года'], ['001', 'Агентство года']]], ['Webby Awards', [['002', 'Победитель'], ['002', 'Номинант']]], ['Lovie Awards', [['001', 'Победитель']]], ['Drum Awards', [['001', 'Дизайн']]], ['CommArts', [['001', 'Интерактивный проект']]]] as const;
 function About() {
-    const [member, setMember] = useState(0);
-    const touch = useRef(0);
     return <>
-  <section className="about-intro"><div className="about-sticky"><Still name="about" background="#090c10" gallery eager/><div className="about-grid-crosses" aria-hidden="true">+<span>+</span>+<span>+</span>+</div><h1 className="about-logo">LUSION</h1><small className="about-scroll">ЛИСТАЙТЕ, ЧТОБЫ ИССЛЕДОВАТЬ</small><div className="about-words"><p>МЫ — КРЕАТИВНАЯ<br />ПРОДАКШН-СТУДИЯ.</p><p>СОЗДАЁМ УНИКАЛЬНЫЙ<br />ЦИФРОВОЙ ОПЫТ.</p></div></div></section>
-  <section className="about-description page-padding section-space"><small>ЛЮДИ. ИДЕИ. ВОЗМОЖНОСТИ.</small><h2 className="split-reveal">Команда со всего мира.<br />Дизайн, движение, 3D<br />и технологии.<br /><span>Одна общая страсть —<br />воплощать невозможное.</span></h2></section>
-  <section className="team page-padding" onTouchStart={e => touch.current = e.changedTouches[0].clientX} onTouchEnd={e => { if (Math.abs(e.changedTouches[0].clientX - touch.current) > 35)
-        setMember(m => (m + 1) % team.length); }}><div className="team-visual"><Still name={`team-${member}`} background="#17191e" gallery/><span className="team-counter">[[ 00{member + 1} ]]</span></div><div className="team-info"><div className="team-topline"><span>ЛЮДИ ЗА ИДЕЯМИ</span><div><button aria-label="Предыдущий участник" onClick={() => setMember(m => (m + 1) % team.length)}>←</button><button aria-label="Следующий участник" onClick={() => setMember(m => (m + 1) % team.length)}>→</button></div></div><h3 key={member}>{team[member].name}</h3><small>{team[member].role}</small><p>Разные дисциплины становятся одним процессом: от первого наброска до работающего интерактивного мира. Нас объединяет внимание к каждой детали и интерес к тому, чего ещё не было.</p><span className="swipe-hint">ПРОВЕДИТЕ, ЧТОБЫ СМЕНИТЬ ↔</span></div></section>
-  <section className="clients page-padding section-space"><div className="clients-heading"><h2 className="display-title reveal">Работаем<br />с лучшими</h2><p>МЕЖДУНАРОДНЫЕ БРЕНДЫ,<br />КУЛЬТУРНЫЕ ИНСТИТУЦИИ<br />И КОМАНДЫ НОВОГО ПОКОЛЕНИЯ.</p></div><div className="client-marquees" aria-label="Клиенты оригинальной студии">{[['Google', 'Porsche', 'Meta', 'Nike', 'Coca-Cola'], ['NETFLIX', 'Max Mara', 'Microsoft', 'SONY', 'adidas'], ['Cartier', 'Spotify', 'SAMSUNG', 'Kew', 'Opera North']].map((row, i) => <div className={`marquee marquee-${i}`} key={i}><div>{[...row, ...row].map((name, j) => <span key={j}>{name}</span>)}</div></div>)}</div></section>
-  <section className="recognition page-padding"><div className="recognition-title"><h2>НАГРАДЫ</h2><span>↗</span><b>58</b></div><div className="awards-list">{awards.map(([title, rows]) => <div className="award-group" key={title}><h3>{title}</h3><div>{rows.map(([n, label]) => <div className="award-row" key={label}><span>{n}</span><p>{label}</p></div>)}</div></div>)}</div><div className="recognition-title"><h2>ПУБЛИКАЦИИ</h2><span>↗</span><b>03</b></div><div className="article-links"><a href="https://newsroom.porsche.com/en_US/2023/company/porsche-great-britain-wallpaper-lusion-short-film-ferry-porsche-356-london-driven-by-dreams-30982.html" target="_blank" rel="noreferrer">Porsche Newsroom — Driven by Dreams <Arrow /></a><a href="https://www.wallpaper.com/art/porsche-driven-by-dreams" target="_blank" rel="noreferrer">Wallpaper* — Driven by Dreams <Arrow /></a><a href="https://www.operanorth.co.uk/news/cutting-edge-creeps-with-new-trailer-for-the-turn-of-the-screw/" target="_blank" rel="noreferrer">Opera North — The Turn of the Screw <Arrow /></a></div><div className="recognition-title"><h2>ВЫСТУПЛЕНИЯ</h2><span>↗</span><b>05</b></div><div className="talks-list">{[['Digital Design Days', 'Октябрь 2024 · Милан'], ['Awwwards Conf', 'Октябрь 2023 · Амстердам'], ['KIKK Festival', 'Октябрь 2023 · Намюр'], ['Awwwards Conf', 'Октябрь 2022 · Амстердам'], ['Grow Paris', 'Ноябрь 2018 · Париж']].map(([name, date]) => <div key={date}><h3>{name}</h3><span>{date}</span></div>)}</div></section>
-  <Tarot /><section className="expertise page-padding section-space"><h2 className="display-title reveal">Области<br />экспертизы</h2><div className="expertise-intro"><p>ОТ СТРАТЕГИИ И ПЕРВОЙ ИДЕИ<br />ДО ТЕХНОЛОГИИ И ПРОДАКШНА.</p><span>s c t p</span></div><div className="expertise-cards">{expertise.map((e, i) => <article className={`expertise-card expertise-${i}`} key={e.title} tabIndex={0}><div><h3>{e.title}</h3><span>0{i + 1}</span></div><b>{e.letter}</b><ul>{e.items.map(item => <li key={item}>{item}</li>)}</ul><span className="expertise-bottom">{e.title}<span>↗</span></span></article>)}</div></section>
+  <section className="about-intro"><div className="about-sticky"><Still name="about" background="#090c10" gallery eager/><div className="about-grid-crosses" aria-hidden="true">+<span>+</span>+<span>+</span>+</div><h1 className="about-logo">LOMOV</h1><small className="about-scroll">ЛИСТАЙТЕ, ЧТОБЫ ИССЛЕДОВАТЬ</small><div className="about-words"><p>КРЕАТИВНЫЙ<br />РАЗРАБОТЧИК</p><p>ВЕБ, 3D<br />И ДВИЖЕНИЕ</p></div></div></section>
+  <section className="about-description page-padding section-space"><small>ОБО МНЕ</small><h2 className="split-reveal">Я — Ломов, креативный разработчик. Работаю с&nbsp;3D, анимацией и&nbsp;интерактивом в&nbsp;браузере.<span>Мне интересно, как движение и&nbsp;реакция на&nbsp;жест меняют восприятие изображения.</span></h2></section>
+  <section className="team page-padding">
+    <div className="team-visual"><Still name="barbershop_batya" background="#10131d"/></div>
+    <div className="team-info">
+      <div className="team-topline"><span>КАК Я РАБОТАЮ</span></div>
+      <h3>От образа к&nbsp;интерактиву</h3>
+      <p>Начинаю с того, что должен почувствовать зритель. Затем собираю композицию, проверяю движение в браузере и оставляю те эффекты, которые помогают раскрыть идею.</p>
+      <Pill to="/projects/">Смотреть проекты</Pill>
+    </div>
+  </section>
+  <Tarot /><section className="expertise page-padding section-space"><h2 className="display-title reveal">Практика</h2><div className="expertise-intro"><p>ОТ ПЕРВОГО ЭСКИЗА<br />ДО РАБОТАЮЩЕГО САЙТА</p><span>s c t p</span></div><div className="expertise-cards">{expertise.map((e, i) => <article className={`expertise-card expertise-${i}`} key={e.title} tabIndex={0}><div><h3>{e.title}</h3><span>0{i + 1}</span></div><b>{e.letter}</b><ul>{e.items.map(item => <li key={item}>{item}</li>)}</ul><span className="expertise-bottom">{e.title}<span>↗</span></span></article>)}</div></section>
  </>;
 }
 function CaseStudy() {
@@ -277,15 +269,9 @@ function CaseStudy() {
     if (!project)
         return <NotFound />;
     const i = allProjects.indexOf(project), next = allProjects[(i + 1) % allProjects.length];
-    const ownWork = 'depthPreview' in project;
     return <article className="case-study"><section className="case-scroll" ref={container} aria-label="Горизонтальная история проекта"><div className="case-track" ref={track}>
-  <section className="case-frame case-opening">{ownWork ? <PortfolioImage work={project}/> : <Still name={project.slug} background={project.background} eager/>}<div className="case-hero-title"><span>ПРОЕКТ {String(i + 1).padStart(2, '0')} / {allProjects.length}</span><h1>{project.title}</h1></div></section>
-  <section className="case-frame case-meta"><small>О ПРОЕКТЕ / {String(i + 1).padStart(2, '0')}</small><h2>{project.title}</h2><div className="case-meta-grid"><div className="case-copy"><p>{project.description}</p>{project.url ? <a className="pill pill-dark" href={project.url} target="_blank" rel="noreferrer"><span>Открыть оригинальный проект</span><span>↗</span></a> : ownWork ? null : <span className="archive-note">Проект в архиве — публичная ссылка запуска отсутствует</span>}</div><aside><div><h3>УСЛУГИ</h3>{project.services.map(s => <span key={s}>{s}</span>)}</div>{project.award && <div><h3>ПРИЗНАНИЕ</h3><p>{project.award}</p></div>}</aside></div></section>
-  {!ownWork && <>
-  <section className="case-frame case-media"><Still name={`${project.slug}-1`} background={project.background} gallery/><span className="gallery-label">01 / ФОРМА</span></section>
-  <section className="case-frame case-portrait"><Still name={`${project.slug}-2`} background={project.background} gallery/><span className="gallery-label">02 / В ДЕТАЛЯХ</span></section>
-  <section className="case-frame case-media"><Still name={`${project.slug}-3`} background={project.background} gallery/><span className="gallery-label">03 / ДРУГОЙ РАКУРС</span></section>
-  </>}
+  <section className="case-frame case-opening"><PortfolioImage work={project}/><TiltPermission/><div className="case-hero-title"><span>ПРОЕКТ {String(i + 1).padStart(2, '0')} / {allProjects.length}</span><h1>{project.title}</h1></div></section>
+  <section className="case-frame case-meta"><small>О ПРОЕКТЕ / {String(i + 1).padStart(2, '0')}</small><h2>{project.title}</h2><div className="case-meta-grid"><div className="case-copy"><p>{project.description}</p></div><aside><div><h3>МОЯ РОЛЬ</h3>{project.services.map(s => <span key={s}>{s}</span>)}</div></aside></div></section>
   <LocalLink to={projectPath(next)} className="case-frame case-next"><Still name={next.slug} background={next.background}/><div><small>СЛЕДУЮЩИЙ ПРОЕКТ</small><h2>{next.title}</h2><span>↗</span></div></LocalLink>
  </div><div className="case-scrollbar"><span ref={progress}/></div><div className="case-direction"><span>ЛИСТАЙТЕ, ЧТОБЫ ИССЛЕДОВАТЬ</span><span>→</span></div></section></article>;
 }
@@ -295,11 +281,16 @@ function Footer({ onContact }: {
     const { pathname } = useLocation();
     const next = pathname.startsWith('/about') ? '/projects/' : '/about/';
     return <>
-  <section className="contact-scene" id="contact"><Still name="contact" background="#2026f6" gallery/><div className="contact-scene-copy"><small>ГОТОВЫ ВЫПУСТИТЬ ИДЕЮ НА ВОЛЮ?</small><button onClick={onContact}>Давайте<br />создавать<span>↗</span></button></div><div className="contact-scroll">ЛИСТАЙТЕ ДАЛЬШЕ <span>↓</span></div></section>
-  <footer className="footer page-padding"><div className="footer-grid"><a className="address" href="https://goo.gl/maps/x9evc1NxZocjrM947" target="_blank" rel="noreferrer">Suite 2, 9 Marsh Street<br />Бристоль, BS1 4AA<br />Великобритания <span>↗</span></a><div className="socials"><a href="https://twitter.com/lusionltd/" target="_blank" rel="noreferrer">Twitter / X ↗</a><a href="https://www.instagram.com/lusionltd/" target="_blank" rel="noreferrer">Instagram ↗</a><a href="https://www.linkedin.com/company/lusionltd/" target="_blank" rel="noreferrer">LinkedIn ↗</a></div><div className="footer-emails"><div><span>Общие вопросы</span><a href="mailto:hello@lusion.co">hello@lusion.co ↗</a></div><div><span>Новый проект</span><a href="mailto:business@lusion.co">business@lusion.co ↗</a></div></div><Newsletter /></div><div className="footer-bottom"><span>©2026 LUSION Creative Studio</span><a href="https://labs.lusion.co" target="_blank" rel="noreferrer">R&D: labs.lusion.co ↗</a><span>Независимая учебная реконструкция</span><button className="footer-top" aria-label="Наверх" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>↑</button></div><LocalLink to={next} className="next-page"><span>ПРОДОЛЖАЙТЕ<br />ИССЛЕДОВАТЬ</span><h2>{next === '/about/' ? 'О нас' : 'Проекты'}</h2><span className="next-page-arrow">↗</span><small>СЛЕДУЮЩАЯ СТРАНИЦА</small><div className="next-page-crosses" aria-hidden="true"><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span></div></LocalLink></footer>
+  <section className="contact-scene" id="contact"><Still name="contact" background="#2026f6" gallery/><div className="contact-scene-copy"><small>ИНТЕРАКТИВ · 3D · ВЕБ</small><button onClick={onContact}>Обсудим<br />проект?<span>↗</span></button></div><div className="contact-scroll">ЛИСТАЙТЕ ДАЛЬШЕ <span>↓</span></div></section>
+  <footer className="footer page-padding">
+    <div className="portfolio-footer">
+      <div><h2>Lomov</h2><p>Креативный разработчик</p></div>
+      <a href={githubProfile} target="_blank" rel="noreferrer">GitHub ↗</a>
+    </div>
+    <div className="footer-bottom"><span>© Lomov</span><button className="footer-top" aria-label="Наверх" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>↑</button></div><LocalLink to={next} className="next-page"><span>ДАЛЬШЕ</span><h2>{next === '/about/' ? 'Обо мне' : 'Проекты'}</h2><span className="next-page-arrow">↗</span><small>СЛЕДУЮЩАЯ СТРАНИЦА</small><div className="next-page-crosses" aria-hidden="true"><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span></div></LocalLink></footer>
  </>;
 }
-function NotFound() { return <section className="not-found page-padding"><span>404</span><h1>Вы вышли за рамки.</h1><Pill to="/">Вернуться на главную</Pill></section>; }
+function NotFound() { return <section className="not-found page-padding"><span>404</span><h1>Страница не найдена.</h1><Pill to="/">Вернуться на главную</Pill></section>; }
 export default function App() {
     const root = useRef<HTMLDivElement>(null);
     const curtain = useRef<HTMLDivElement>(null);
@@ -331,7 +322,9 @@ export default function App() {
         document.documentElement.style.setProperty('--paper', theme);
         document.documentElement.style.setProperty('--ink', light ? '#08090b' : '#f5f5fa');
         document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme);
-        document.title = `Lusion — ${project?.title || (location.pathname.startsWith('/about') ? 'О нас' : location.pathname === '/projects/' ? 'Проекты' : 'Истории в 3D')} · Учебная реконструкция`;
+        const section = location.pathname.split('/')[1];
+        const titles: Record<string, string> = { about: 'Обо мне', projects: 'Проекты', astronaut: 'Полёт астронавта', 'astronaut-review': 'Сцены полёта' };
+        document.title = `Lomov — ${project?.title ?? (section ? titles[section] ?? 'Страница не найдена' : 'Креативный разработчик')}`;
         const timeout = setTimeout(() => ScrollTrigger.refresh(), 250);
         return () => clearTimeout(timeout);
     }, [location.pathname]);
@@ -371,5 +364,5 @@ export default function App() {
         }, root);
         return () => ctx.revert();
     }, [location.pathname]);
-    return <NavigationContext.Provider value={go}><div ref={root} className="app">{/^(?:\/|\/astronaut(?:-review)?\/?)$/.test(location.pathname) && <Suspense fallback={null}><Graphics source={root} home={location.pathname === '/'}/></Suspense>}<Header onContact={() => setContact(true)}/><main id="main" key={location.pathname}><Routes><Route path="/" element={<Home onReel={() => setReel(true)}/>}/><Route path="/astronaut-review" element={<Suspense fallback={<AstronautPlaceholder/>}><AstronautReview/></Suspense>}/><Route path="/astronaut" element={<Suspense fallback={<AstronautPlaceholder/>}><AstronautSequence standalone/></Suspense>}/><Route path="/about" element={<About />}/><Route path="/projects" element={<Projects />}/><Route path="/projects/:slug" element={<CaseStudy />}/><Route path="*" element={<NotFound />}/></Routes><Footer onContact={() => setContact(true)}/></main>{contact && <Contact onClose={contactClose}/>} {reel && <Reel onClose={reelClose}/>}<div className="page-curtain" ref={curtain} aria-hidden="true"><span>LUSION</span></div><a href="#main" className="skip-link">Перейти к содержимому</a></div></NavigationContext.Provider>;
+    return <TiltProvider><NavigationContext.Provider value={go}><div ref={root} className="app">{/^(?:\/|\/astronaut(?:-review)?\/?)$/.test(location.pathname) && <Suspense fallback={null}><Graphics source={root} home={location.pathname === '/'}/></Suspense>}<Header onContact={() => setContact(true)}/><main id="main" key={location.pathname}><Routes><Route path="/" element={<Home onReel={() => setReel(true)}/>}/><Route path="/astronaut-review" element={<Suspense fallback={<AstronautPlaceholder/>}><AstronautReview/></Suspense>}/><Route path="/astronaut" element={<Suspense fallback={<AstronautPlaceholder/>}><AstronautSequence standalone/></Suspense>}/><Route path="/about" element={<About />}/><Route path="/projects" element={<Projects />}/><Route path="/projects/:slug" element={<CaseStudy />}/><Route path="*" element={<NotFound />}/></Routes><Footer onContact={() => setContact(true)}/></main>{contact && <Contact onClose={contactClose}/>} {reel && <Reel onClose={reelClose}/>}<div className="page-curtain" ref={curtain} aria-hidden="true"><span>LOMOV</span></div><a href="#main" className="skip-link">Перейти к содержимому</a></div></NavigationContext.Provider></TiltProvider>;
 }

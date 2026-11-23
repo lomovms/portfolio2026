@@ -1,10 +1,11 @@
 .astronaut-sequence{position:relative;height:350svh;background:transparent;isolation:isolate}
 .astro-sticky{position:sticky;top:0;height:100svh;overflow:clip}
-.astro-heading{position:absolute;left:4.6vw;top:-2.1vw;margin:0;font-size:clamp(64px,9.5vw,190px);line-height:1;letter-spacing:-.075em;font-weight:400;z-index:1}
+.astro-heading{position:absolute;left:var(--pad);top:0;margin:0;font-size:clamp(54px,min(8.8vw,15svh),170px);line-height:1.04;letter-spacing:-.055em;font-weight:520;z-index:1}
 .astro-scribble{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
 .astro-scribble svg{width:100%;height:100%}
-.astro-copy{position:absolute;left:59%;top:24%;width:35%;font-size:clamp(18px,1.7vw,34px);line-height:1.42;letter-spacing:-.035em}
+.astro-copy{position:absolute;left:59%;top:24%;width:36%;max-width:35ch;font-size:clamp(16px,1.65vw,31px);line-height:1.5;letter-spacing:-.012em;text-wrap:pretty}
 .astro-copy p{margin:0 0 1.2em}
+.astro-standalone .astro-heading{left:20%;top:8vh;font-size:clamp(46px,min(6.5vw,11svh),130px)}
 .astro-device{position:absolute;left:5vw;top:21vh;width:46vw;height:33.21vw;border:24px solid #0a0b09;border-radius:36px;box-shadow:0 7px 48px #0004;outline:2px solid #5b5c58;z-index:2;--screen-radius:19px}
 .astro-device:before{content:'';position:absolute;inset:-23px;pointer-events:none;border:1px solid #6c6e68;border-radius:inherit}
 .astro-device-camera{position:absolute;width:8px;height:8px;background:#010302;border-radius:50%;left:-17px;top:38%;box-shadow:0 47px 0 #010302,0 62px 0 #010302;z-index:4}
@@ -32,5 +33,6 @@
 .app:has(.astro-immersed) .header .logo{color:white;mix-blend-mode:normal}
 @media(max-width:700px){.astro-heading{top:12vh;font-size:13vw;left:5vw}.astro-copy{left:5vw;top:calc(22vh + 65vw + 32px);width:90%;font-size:17px;line-height:1.4}.astro-copy p{margin-bottom:.8em}.astro-device{border-width:15px}.astro-device:before{inset:-14px}.astro-device-camera{left:-11px;width:5px;height:5px}.astro-hint{font-size:7px;bottom:24px;gap:14px}.astro-hint .astro-sound{font-size:7px;padding:0 10px}.astro-finale h2{font-size:14vw}.astro-back{bottom:12px}}
 @media(prefers-reduced-motion:reduce){.astronaut-sequence{height:400svh}.astro-hint span{display:none}}
+@media(max-width:700px){.astro-standalone .astro-heading{left:var(--pad);top:12vh;font-size:min(13vw,8svh)}.astro-copy{max-width:42ch;font-size:clamp(14px,4vw,17px)}}
 @media(max-width:700px){.astro-finale{left:5vw;top:22vh;width:90vw;height:65vw}.astro-finale h2{font-size:8vw}.astro-finale small{font-size:7px}.astro-finale a{font-size:11px}.astro-finale button{padding:9px 16px;margin-top:10px;font-size:10px}}
 
