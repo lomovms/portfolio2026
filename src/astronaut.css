@@ -1,0 +1,36 @@
+.astronaut-sequence{position:relative;height:350svh;background:transparent;isolation:isolate}
+.astro-sticky{position:sticky;top:0;height:100svh;overflow:clip}
+.astro-heading{position:absolute;left:4.6vw;top:-2.1vw;margin:0;font-size:clamp(64px,9.5vw,190px);line-height:1;letter-spacing:-.075em;font-weight:400;z-index:1}
+.astro-scribble{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.astro-scribble svg{width:100%;height:100%}
+.astro-copy{position:absolute;left:59%;top:24%;width:35%;font-size:clamp(18px,1.7vw,34px);line-height:1.42;letter-spacing:-.035em}
+.astro-copy p{margin:0 0 1.2em}
+.astro-device{position:absolute;left:5vw;top:21vh;width:46vw;height:33.21vw;border:24px solid #0a0b09;border-radius:36px;box-shadow:0 7px 48px #0004;outline:2px solid #5b5c58;z-index:2;--screen-radius:19px}
+.astro-device:before{content:'';position:absolute;inset:-23px;pointer-events:none;border:1px solid #6c6e68;border-radius:inherit}
+.astro-device-camera{position:absolute;width:8px;height:8px;background:#010302;border-radius:50%;left:-17px;top:38%;box-shadow:0 47px 0 #010302,0 62px 0 #010302;z-index:4}
+.astro-screen{position:absolute;inset:0;touch-action:pan-y;cursor:grab}
+.astro-screen:active{cursor:grabbing}
+.astro-view{position:absolute!important;inset:0;width:100%;height:100%;pointer-events:none}
+.astro-exit-view{position:absolute!important;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
+.astro-review .astronaut-sequence{height:100svh}.astro-review-controls{position:fixed;left:5vw;right:5vw;top:90px;z-index:30;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px;background:#f1f2f4ed;border-radius:14px;font:11px Arial;color:#15171b}.astro-review-controls button,.astro-review-controls a{padding:8px 10px;border:1px solid #ccd0d5;border-radius:16px;background:white;color:#15171b}.astro-review-controls button[aria-pressed=true]{background:#1616ee;color:white}.astro-review-controls label{display:flex;align-items:center;gap:8px}
+.astro-review .astro-hint{display:none}
+.astro-review .astro-finale button{display:none}
+.astro-screen:after{content:'';position:absolute;inset:-.5px;pointer-events:none;z-index:3;background:radial-gradient(circle at 100% 100%,transparent var(--screen-radius),#0a0b09 calc(var(--screen-radius) + .5px)) top left,radial-gradient(circle at 0 100%,transparent var(--screen-radius),#0a0b09 calc(var(--screen-radius) + .5px)) top right,radial-gradient(circle at 100% 0,transparent var(--screen-radius),#0a0b09 calc(var(--screen-radius) + .5px)) bottom left,radial-gradient(circle at 0 0,transparent var(--screen-radius),#0a0b09 calc(var(--screen-radius) + .5px)) bottom right;background-size:var(--screen-radius) var(--screen-radius);background-repeat:no-repeat}
+.astro-loading{position:absolute;inset:0;background:#020403;color:#a9b4b1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;font-size:10px;letter-spacing:.1em;border-radius:var(--screen-radius)}
+.astro-loading span{font-size:24px}
+.astro-hint{position:absolute;bottom:30px;left:5vw;right:5vw;z-index:4;display:flex;align-items:center;justify-content:space-between;color:#d5deda;font-size:9px;line-height:1.8;letter-spacing:.09em;opacity:0;visibility:hidden;pointer-events:none}
+.astro-hint button{border:1px solid #81928a66;background:#14221c66;backdrop-filter:blur(12px);color:white;border-radius:50%;width:43px;height:43px;pointer-events:auto}
+.astro-controls{display:flex;gap:10px;align-items:center}.astro-hint .astro-sound{width:auto;padding:0 16px;border-radius:24px;font-size:9px;letter-spacing:.05em}.astro-audio-error{position:absolute;bottom:85px;left:5vw;color:white;z-index:5;font-size:12px}
+.astro-finale{position:absolute;left:5vw;top:21vh;width:46vw;height:33.21vw;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;color:white;z-index:3;opacity:0;visibility:hidden;pointer-events:none}
+.astro-finale small{font-size:10px;letter-spacing:.1em}
+.astro-finale h2{font-size:clamp(35px,4vw,80px);letter-spacing:-.065em;line-height:.96;font-weight:400;margin:.45em 0}
+.astro-finale a{pointer-events:auto;border-bottom:1px solid #fff8;padding:10px;font-size:14px}
+.astro-finale button{pointer-events:auto;border:1px solid #fff5;border-radius:24px;padding:12px 22px;margin-top:20px;background:#12211c99;color:white;font-size:12px}
+.astro-back,.astro-skip{position:absolute;bottom:30px;z-index:5;font-size:9px;letter-spacing:.08em}
+.astro-back{left:5vw}.astro-immersed .astro-back{bottom:90px}.astro-skip{right:5vw;opacity:0;pointer-events:none}.astro-skip:focus{opacity:1;pointer-events:auto}
+.astro-immersed .astro-back{color:white}.astro-immersed .astro-finale a{color:white}
+.app:has(.astro-immersed) .header .logo{color:white;mix-blend-mode:normal}
+@media(max-width:700px){.astro-heading{top:12vh;font-size:13vw;left:5vw}.astro-copy{left:5vw;top:calc(22vh + 65vw + 32px);width:90%;font-size:17px;line-height:1.4}.astro-copy p{margin-bottom:.8em}.astro-device{border-width:15px}.astro-device:before{inset:-14px}.astro-device-camera{left:-11px;width:5px;height:5px}.astro-hint{font-size:7px;bottom:24px;gap:14px}.astro-hint .astro-sound{font-size:7px;padding:0 10px}.astro-finale h2{font-size:14vw}.astro-back{bottom:12px}}
+@media(prefers-reduced-motion:reduce){.astronaut-sequence{height:400svh}.astro-hint span{display:none}}
+@media(max-width:700px){.astro-finale{left:5vw;top:22vh;width:90vw;height:65vw}.astro-finale h2{font-size:8vw}.astro-finale small{font-size:7px}.astro-finale a{font-size:11px}.astro-finale button{padding:9px 16px;margin-top:10px;font-size:10px}}
+

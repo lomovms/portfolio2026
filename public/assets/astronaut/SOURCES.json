@@ -1,0 +1,146 @@
+{
+  "retrieved": "2026-10-24",
+  "reference": "https://lusion.co/",
+  "scope": "Publicly loaded model and texture data, acquired at the user request for local educational study. Original website JavaScript and shaders were not copied.",
+  "rights": "Original data: Lusion and respective rights holders. Public availability and GLB conversion do not grant a reuse license.",
+  "files": [
+    {
+      "file": "astronaut_animations.buf",
+      "source": "https://lusion.dev/assets/models/tunnels/astronaut_animations.buf",
+      "bytes": 336188,
+      "sha256": "e4ec2a089fd4942970208f4499f87e0cd9cd8835b475d6df5b1213ffccbf596d"
+    },
+    {
+      "file": "astronaut_glove_shoes_arm.webp",
+      "source": "https://lusion.dev/assets/textures/tunnels/astronaut/astronaut_glove_shoes_arm.webp",
+      "bytes": 276990,
+      "sha256": "69f52fcf055e8c805acb61e6277318ef8e7e2e5d2a0dc87be0a77b2381f1d33f"
+    },
+    {
+      "file": "astronaut_glove_shoes_base.webp",
+      "source": "https://lusion.dev/assets/textures/tunnels/astronaut/astronaut_glove_shoes_base.webp",
+      "bytes": 356024,
+      "sha256": "d59fb28e11fea0be7e1a9e0cf980556cbe8952dab1f5caabc98197686c32a5f8"
+    },
+    {
+      "file": "astronaut_glove_shoes_nor.webp",
+      "source": "https://lusion.dev/assets/textures/tunnels/astronaut/astronaut_glove_shoes_nor.webp",
+      "bytes": 436250,
+      "sha256": "64d1177c69de2eec383cfa5489028f3a1ba3a177378946545b04ab04f9364fd6"
+    },
+    {
+      "file": "astronaut_glove_shoes.buf",
+      "source": "https://lusion.dev/assets/models/tunnels/astronaut_glove_shoes.buf",
+      "bytes": 120976,
+      "sha256": "9e40450f6f895befb151f20de6f1b4d178dcdf8b65cffd61916bd94d7b84ecf8"
+    },
+    {
+      "file": "astronaut_helmet_arm.webp",
+      "source": "https://lusion.dev/assets/textures/tunnels/astronaut/astronaut_helmet_arm.webp",
+      "bytes": 247466,
+      "sha256": "bc70926781c2f48e3114d13a1915d9102bac09c429818eb3de69b1fd8de198ad"
+    },
+    {
+      "file": "astronaut_helmet_base.webp",
+      "source": "https://lusion.dev/assets/textures/tunnels/astronaut/astronaut_helmet_base.webp",
+      "bytes": 244766,
+      "sha256": "451bd10dc789305ba60cbf03b6377b6b21a0f509a4ab37236e88b54882bfcb53"
+    },
+    {
+      "file": "astronaut_helmet_glass.buf",
+      "source": "https://lusion.dev/assets/models/tunnels/astronaut_helmet_glass.buf",
+      "bytes": 5979,
+      "sha256": "d0a887139d51896f507626fe8a4a61063a6def586d43a92fe91d42e34f826864"
+    },
+    {
+      "file": "astronaut_helmet_nor.webp",
+      "source": "https://lusion.dev/assets/textures/tunnels/astronaut/astronaut_helmet_nor.webp",
+      "bytes": 357692,
+      "sha256": "a11cc706dbb69b44fc0deffdc29150494b83fcce1c0c7ae59d8f65a3436cb22e"
+    },
+    {
+      "file": "astronaut_helmet.buf",
+      "source": "https://lusion.dev/assets/models/tunnels/astronaut_helmet.buf",
+      "bytes": 172619,
+      "sha256": "845e2d914f93b2668a86fd2da0c1e61a14a23e030a7ce4b53da01b82c08ea13f"
+    },
+    {
+      "file": "astronaut_in_animation.buf",
+      "source": "https://lusion.dev/assets/models/tunnels/astronaut_in_animation.buf",
+      "bytes": 1960,
+      "sha256": "8d93587dbee3e033ac5b1268dc9866110310e89228d6e2c01b5a9b549a730e01"
+    },
+    {
+      "file": "astronaut_out_animation.buf",
+      "source": "https://lusion.dev/assets/models/tunnels/astronaut_out_animation.buf",
+      "bytes": 2564,
+      "sha256": "27c2dfbdf34f602634eaa708e2c7e153c57a5e5b28fb20c1d9a6bb65be2616fc"
+    },
+    {
+      "file": "astronaut_wearpack_arm.webp",
+      "source": "https://lusion.dev/assets/textures/tunnels/astronaut/astronaut_wearpack_arm.webp",
+      "bytes": 175634,
+      "sha256": "1c56eba83e47e08a29a067a6b05efa7dfd97e82100489efae7d34e9b456f3069"
+    },
+    {
+      "file": "astronaut_wearpack_base.webp",
+      "source": "https://lusion.dev/assets/textures/tunnels/astronaut/astronaut_wearpack_base.webp",
+      "bytes": 330450,
+      "sha256": "e7350fd1de0d4aae59b6127e3c601d45541916a00b84e6ade9fffbf763799d68"
+    },
+    {
+      "file": "astronaut_wearpack_nor.webp",
+      "source": "https://lusion.dev/assets/textures/tunnels/astronaut/astronaut_wearpack_nor.webp",
+      "bytes": 460660,
+      "sha256": "ee28178f0a7b1bc6f8492ceacb0cd247c345d4636b65a4f8110afba8b37d6d16"
+    },
+    {
+      "file": "astronaut_wearpack.buf",
+      "source": "https://lusion.dev/assets/models/tunnels/astronaut_wearpack.buf",
+      "bytes": 193065,
+      "sha256": "b7b0eb8eb8ea6d968808936ae60fc03cd767da067e8f5082f04164ef055c0b3a"
+    },
+    {
+      "file": "broken_glass_animation.buf",
+      "source": "https://lusion.dev/assets/models/tunnels/broken_glass_animation.buf",
+      "bytes": 312576,
+      "sha256": "1c78a671ae1abdc563f7ace98dd524dd8c24be1e7015a1d2ed95cd1cb0546516"
+    },
+    {
+      "file": "broken_glass.buf",
+      "source": "https://lusion.dev/assets/models/tunnels/broken_glass.buf",
+      "bytes": 135904,
+      "sha256": "5c055aea28cc2185b647a1963065494b3fc00fd7f24158ffe4b438afdab904e8"
+    },
+    {
+      "file": "earth_landscape.jpg",
+      "source": "https://lusion.dev/assets/textures/tunnels/earth_landscape.jpg",
+      "bytes": 245092,
+      "sha256": "2f27be7fd37e4887571e808c6a07b318c72e05b65289cf994079bd696fd5d0b9"
+    },
+    {
+      "file": "earth.webp",
+      "source": "https://lusion.dev/assets/textures/tunnels/earth.webp",
+      "bytes": 1634,
+      "sha256": "87a4f1e08a0dce61ce3dab70455f57e6b962fec1cb4e79fedb57e3a8329e205c"
+    },
+    {
+      "file": "face.png",
+      "source": "https://lusion.dev/assets/textures/tunnels/astronaut/face.png",
+      "bytes": 771,
+      "sha256": "6289e452c09225d8135c27dc05ae663f11370cf5c782ab1746323910dfb2c0cc"
+    },
+    {
+      "file": "tablet.png",
+      "source": "https://lusion.dev/assets/textures//tunnels/tablet.png",
+      "bytes": 73188,
+      "sha256": "e5dae8a0eea7074290e585ded9bfdc0d47b796e4f928a7cbd4abfd836a1fd1c6"
+    },
+    {
+      "file": "white_matcap.jpg",
+      "source": "https://lusion.dev/assets/textures/tunnels/white_matcap.jpg",
+      "bytes": 69851,
+      "sha256": "0852f8f314bbc454a07cc8ee1f37220aefe2ff64c481f7cd0a8d6b0b758dc875"
+    }
+  ]
+}

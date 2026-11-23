@@ -1,0 +1,56 @@
+{
+  "retrieved": "2026-10-24",
+  "reference": "https://lusion.co/",
+  "scope": "Public audio resources observed loading in the reference site. Local temporary study at the user request; replace before publication.",
+  "rights": "Lusion and respective rights holders; no open reuse license verified.",
+  "files": [
+    {
+      "file": "cinematic_0.ogg",
+      "source": "https://lusion.dev/assets/audios/cinematic_0.ogg",
+      "bytes": 132390,
+      "sha256": "481c7d87d9eb009e207b02f9bc6c6468f5b661fcf48f2bd748c887728da9c458",
+      "codec": "Vorbis",
+      "durationSeconds": 7.114013605442177
+    },
+    {
+      "file": "cinematic_2.ogg",
+      "source": "https://lusion.dev/assets/audios/cinematic_2.ogg",
+      "bytes": 102857,
+      "sha256": "090d37d49a1d94aee9a1cf7884c900a85cfdecf7189c2db1cebc3c14d84b4ec4",
+      "codec": "Vorbis",
+      "durationSeconds": 5.607619047619048
+    },
+    {
+      "file": "cinematic_3.ogg",
+      "source": "https://lusion.dev/assets/audios/cinematic_3.ogg",
+      "bytes": 219018,
+      "sha256": "4da6b0553a09a94d04bf8405682c5c082cdb98046159fd723e01d391db264cc3",
+      "codec": "Vorbis",
+      "durationSeconds": 11.296530612244897
+    },
+    {
+      "file": "generic.ogg",
+      "source": "https://lusion.dev/assets/audios/generic.ogg",
+      "bytes": 236668,
+      "sha256": "f2ed982c0efa03a551c7c36c7ea55fc2a5ab1879183195e2064f67f9e3a93bd5",
+      "codec": "Vorbis",
+      "durationSeconds": 12.000113378684807
+    },
+    {
+      "file": "generic_end.ogg",
+      "source": "https://lusion.dev/assets/audios/generic_end.ogg",
+      "bytes": 475936,
+      "sha256": "f5cc419624795dbb604767686bc94bb940f7feb2c31a77f8468fe210c9036d73",
+      "codec": "Vorbis",
+      "durationSeconds": 25.59392290249433
+    },
+    {
+      "file": "glass_broken.ogg",
+      "source": "https://lusion.dev/assets/audios/glass_broken.ogg",
+      "bytes": 30803,
+      "sha256": "2038a39aaedefdc0824ce9b8f1a66f348bed1aa22ca9b673bc68454439ef0afd",
+      "codec": "Vorbis",
+      "durationSeconds": 1.5996145124716554
+    }
+  ]
+}
