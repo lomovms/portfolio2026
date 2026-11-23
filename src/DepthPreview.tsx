@@ -79,6 +79,7 @@ function loadTextures(slug: string, portfolio: boolean) {
 }
 
 const portfolioParallax = { depthStrength: .57, smoothness: .35, invertDepth: true };
+const tiltParallax = { zoom: 1.12, depthStrength: 1.02, batyaStrength: .58, angleRange: 12 };
 function preview(surface: HTMLDivElement, slug: string, background: string, pointer: THREE.Vector2, hovering: { current: boolean }, portfolio: boolean, wake: { current: (() => void) | null }, onReplaced: () => void, tilt: boolean) {
     const createRenderer = () => new THREE.WebGLRenderer({ alpha: true, antialias: false });
     let gl: THREE.WebGLRenderer;
@@ -95,7 +96,10 @@ function preview(surface: HTMLDivElement, slug: string, background: string, poin
     let stopped = false, animation = 0, previous = performance.now();
     const resize = () => {
         const width = surface.clientWidth, height = surface.clientHeight;
-        gl.setPixelRatio(portfolio ? 1 : Math.min(window.devicePixelRatio, 1.5));
+        const pixelRatio = tilt
+            ? Math.min(window.devicePixelRatio, 2, Math.sqrt(850_000 / Math.max(1, width * height)))
+            : portfolio ? 1 : Math.min(window.devicePixelRatio, 1.5);
+        gl.setPixelRatio(pixelRatio);
         gl.setSize(Math.max(1, width), Math.max(1, height), false);
         const aspect = width / Math.max(1, height), imageAspect = 1000 / 650;
         cover.set(Math.min(1, aspect / imageAspect), Math.min(1, imageAspect / aspect));
@@ -150,8 +154,11 @@ function preview(surface: HTMLDivElement, slug: string, background: string, poin
             uniforms.image.value = image;
             uniforms.depthMap.value = depth;
             uniforms.background.value.copy(backgroundColor);
-            uniforms.zoom.value = portfolio ? 1.075 : 1.10;
-            uniforms.depthStrength.value = portfolio ? (slug === 'barbershop_batya' ? .23 : portfolioParallax.depthStrength) : 1;
+            uniforms.zoom.value = tilt ? tiltParallax.zoom : portfolio ? 1.075 : 1.10;
+            const batya = slug === 'barbershop_batya';
+            uniforms.depthStrength.value = tilt
+                ? (batya ? tiltParallax.batyaStrength : tiltParallax.depthStrength)
+                : portfolio ? (batya ? .23 : portfolioParallax.depthStrength) : 1;
             uniforms.invertDepth.value = portfolio && portfolioParallax.invertDepth;
             uniforms.focusEnabled.value = !portfolio;
             uniforms.offset.value.copy(offset);
@@ -192,8 +199,8 @@ export function DepthPreview({ slug, background, portfolio = false, tilt = false
             if (beta === null || gamma === null) return;
             const angle = screen.orientation?.angle ?? Number(window.orientation ?? 0);
             if (!origin || origin.angle !== angle) origin = { beta, gamma, angle };
-            const x = (gamma - origin.gamma) / 24;
-            const y = (THREE.MathUtils.euclideanModulo(beta - origin.beta + 180, 360) - 180) / 24;
+            const x = (gamma - origin.gamma) / tiltParallax.angleRange;
+            const y = (THREE.MathUtils.euclideanModulo(beta - origin.beta + 180, 360) - 180) / tiltParallax.angleRange;
             const radians = THREE.MathUtils.degToRad(angle);
             const horizontal = THREE.MathUtils.clamp(x * Math.cos(radians) + y * Math.sin(radians), -1, 1);
             const vertical = THREE.MathUtils.clamp(x * Math.sin(radians) - y * Math.cos(radians), -1, 1);
@@ -223,6 +230,6 @@ export function DepthPreview({ slug, background, portfolio = false, tilt = false
     };
     const leave = () => { if (tilt) return; hovering.current = false; pointer.current.set(0, 0); wake.current?.(); clearTimeout(timeout.current); timeout.current = setTimeout(() => setActive(false), portfolio ? 1350 : 650); };
     return <div ref={surface} className="depth-preview" onPointerEnter={move} onPointerMove={move} onPointerLeave={leave} onPointerCancel={leave}>
-        <img src={assetPath(`assets/cards/${slug}.webp`)} alt="" draggable={false} loading="lazy" decoding="async" width="1000" height="650" style={{ background, transform: portfolio ? 'scale(1.075)' : undefined }}/>
+        <img src={assetPath(`assets/cards/${slug}.webp`)} alt="" draggable={false} loading="lazy" decoding="async" width="1000" height="650" style={{ background, transform: tilt ? `scale(${tiltParallax.zoom})` : portfolio ? 'scale(1.075)' : undefined }}/>
     </div>;
 }
